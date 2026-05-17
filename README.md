@@ -231,11 +231,11 @@ Contributions make the open-source community an amazing place to learn, inspire,
 
 **Devansh Agrawal**
 
-🎓 B.Tech CSE, The ICFAI University, Raipur
-🧠 Full Stack & AI Developer
-🔗 [LinkedIn](https://www.linkedin.com/in/thedevanshagrawal/) 
-💻 [GitHub](https://github.com/thedevanshagrawal)
-📧 Email: agrawaldevansh27@gmail.com
+🎓 B.Tech CSE, The ICFAI University, Raipur <br>
+🧠 Full Stack & AI Developer <br>
+🔗 [LinkedIn](https://www.linkedin.com/in/thedevanshagrawal/)  <br>
+💻 [GitHub](https://github.com/thedevanshagrawal) <br>
+📧 Email: agrawaldevansh27@gmail.com <br>
 
 ---
 
