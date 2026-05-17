@@ -29,7 +29,7 @@
 - [📈 Future Roadmap](#-future-roadmap)
 - [🤝 Contributing Guide](#-contributing-guide)
 - [👤 Author](#-author)
-- [📄 Licence](#-license)
+- [📄 License](#-license)
 
 ---
 
