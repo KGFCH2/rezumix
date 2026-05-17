@@ -1,5 +1,7 @@
 "use client";
 
+import { memo } from "react";
+
 const emptyEntry = {
   company: "",
   role: "",
@@ -91,7 +93,7 @@ function ExperienceCard({ entry, index, onChange, onRemove }) {
   );
 }
 
-export default function ExperienceSection({ data, onChange }) {
+function ExperienceSection({ data, onChange }) {
   const handleChange = (index, updated) => {
     const newData = [...data];
     newData[index] = updated;
@@ -132,3 +134,5 @@ export default function ExperienceSection({ data, onChange }) {
     </div>
   );
 }
+
+export default memo(ExperienceSection);

@@ -1,5 +1,7 @@
 "use client";
 
+import { memo } from "react";
+
 const emptyEntry = {
   institution: "",
   degree: "",
@@ -63,7 +65,7 @@ function EducationCard({ entry, index, onChange, onRemove }) {
   );
 }
 
-export default function EducationSection({ data, onChange }) {
+function EducationSection({ data, onChange }) {
   return (
     <div className="space-y-4">
       <h2 className="text-sm font-semibold text-white/70">Education</h2>
@@ -94,3 +96,5 @@ export default function EducationSection({ data, onChange }) {
     </div>
   );
 }
+
+export default memo(EducationSection);

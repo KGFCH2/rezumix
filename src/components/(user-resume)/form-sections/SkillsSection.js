@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 
 function TagInput({ label, tags, onAdd, onRemove, placeholder }) {
   const [input, setInput] = useState("");
@@ -46,7 +46,7 @@ function TagInput({ label, tags, onAdd, onRemove, placeholder }) {
   );
 }
 
-export default function SkillsSection({ data, onChange }) {
+function SkillsSection({ data, onChange }) {
   const update = (type, newTags) => {
     onChange({ ...data, [type]: newTags });
   };
@@ -70,4 +70,4 @@ export default function SkillsSection({ data, onChange }) {
       />
     </div>
   );
-}
+}export default memo(SkillsSection);

@@ -1,5 +1,5 @@
 "use client";
-
+import { memo } from "react";
 const emptyProject = { title: "", description: "", techStack: "", link: "" };
 
 function ProjectCard({ entry, index, onChange, onRemove }) {
@@ -46,7 +46,7 @@ function ProjectCard({ entry, index, onChange, onRemove }) {
   );
 }
 
-export default function ProjectsSection({ data, onChange }) {
+function ProjectsSection({ data, onChange }) {
   return (
     <div className="space-y-4">
       <h2 className="text-sm font-semibold text-white/70">Projects</h2>
@@ -76,4 +76,4 @@ export default function ProjectsSection({ data, onChange }) {
       </button>
     </div>
   );
-}
+}export default memo(ProjectsSection);

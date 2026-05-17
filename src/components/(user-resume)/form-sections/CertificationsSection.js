@@ -1,5 +1,7 @@
 "use client";
 
+import { memo } from "react";
+
 function Field({ label, name, value, onChange, type = "text", placeholder = "" }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -17,7 +19,7 @@ function Field({ label, name, value, onChange, type = "text", placeholder = "" }
   );
 }
 
-export default function PersonalInfoSection({ data, onChange }) {
+function PersonalInfoSection({ data, onChange }) {
   const handleChange = (field, value) => {
     onChange({ ...data, [field]: value });
   };
@@ -27,55 +29,16 @@ export default function PersonalInfoSection({ data, onChange }) {
       <h2 className="text-sm font-semibold text-white/70 mb-4">
         Personal Information
       </h2>
-
-      <Field
-        label="Full Name"
-        name="fullName"
-        value={data.fullName}
-        onChange={handleChange}
-        placeholder="John Doe"
-      />
+      <Field label="Full Name" name="fullName" value={data.fullName} onChange={handleChange} placeholder="John Doe" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field
-          label="Email"
-          name="email"
-          value={data.email}
-          onChange={handleChange}
-          type="email"
-          placeholder="john@example.com"
-        />
-        <Field
-          label="Phone"
-          name="phone"
-          value={data.phone}
-          onChange={handleChange}
-          placeholder="+1 (555) 000-0000"
-        />
+        <Field label="Email" name="email" value={data.email} onChange={handleChange} type="email" placeholder="john@example.com" />
+        <Field label="Phone" name="phone" value={data.phone} onChange={handleChange} placeholder="+1 (555) 000-0000" />
       </div>
-      <Field
-        label="Location"
-        name="location"
-        value={data.location}
-        onChange={handleChange}
-        placeholder="City, State, Country"
-      />
+      <Field label="Location" name="location" value={data.location} onChange={handleChange} placeholder="City, State, Country" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field
-          label="LinkedIn URL"
-          name="linkedin"
-          value={data.linkedin}
-          onChange={handleChange}
-          placeholder="linkedin.com/in/johndoe"
-        />
-        <Field
-          label="Portfolio / GitHub"
-          name="portfolio"
-          value={data.portfolio}
-          onChange={handleChange}
-          placeholder="github.com/johndoe"
-        />
+        <Field label="LinkedIn URL" name="linkedin" value={data.linkedin} onChange={handleChange} placeholder="linkedin.com/in/johndoe" />
+        <Field label="Portfolio / GitHub" name="portfolio" value={data.portfolio} onChange={handleChange} placeholder="github.com/johndoe" />
       </div>
-
       <div className="flex flex-col gap-1.5">
         <label className="text-xs font-medium text-white/50 uppercase tracking-wide">
           Professional Summary
@@ -91,3 +54,5 @@ export default function PersonalInfoSection({ data, onChange }) {
     </div>
   );
 }
+
+export default memo(PersonalInfoSection);

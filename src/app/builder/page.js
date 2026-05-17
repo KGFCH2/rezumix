@@ -1,7 +1,8 @@
 "use client";
-import { useState, useCallback, useEffect } from "react";
 
+import { useState, useCallback, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import ResumeForm from "@/components/(user-resume)/ResumeForm";
 import ResumePreview from "@/components/(user-resume)/ResumePreview";
 import BuilderHeader from "@/components/(user-resume)/BuilderHeader";
@@ -27,27 +28,36 @@ const defaultResumeData = {
 };
 
 export default function BuilderPage() {
-  const { data: session } = useSession();
-  const getSavedData = () => {
-  if (typeof window === "undefined") return defaultResumeData;
-  const saved = localStorage.getItem("resumeBuilderData");
-  return saved ? JSON.parse(saved) : defaultResumeData;
-};
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   const [resumeData, setResumeData] = useState(defaultResumeData);
-
-useEffect(() => {
-  const saved = localStorage.getItem("resumeBuilderData");
-  if (saved) {
-    setResumeData(JSON.parse(saved));
-  }
-}, []);
   const [activeTemplate, setActiveTemplate] = useState("modern");
   const [mobileView, setMobileView] = useState("form");
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
   const [suggestions, setSuggestions] = useState(null);
   const [suggesting, setSuggesting] = useState(false);
+
+  // Auth redirect
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
+
+  // Load from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("resumeBuilderData");
+    if (saved) {
+      setResumeData(JSON.parse(saved));
+    }
+  }, []);
+
+  // Save to localStorage on change
+  useEffect(() => {
+    localStorage.setItem("resumeBuilderData", JSON.stringify(resumeData));
+  }, [resumeData]);
 
   const updateResumeData = useCallback((section, value) => {
     setResumeData((prev) => ({
@@ -57,14 +67,13 @@ useEffect(() => {
   }, []);
 
   const handleSave = async () => {
-   
-   const userEmail = session?.user?.email;
+    const userEmail = session?.user?.email;
     if (!userEmail) {
-     setSaveMsg("❌ Please login to save your resume");
-     setTimeout(() => setSaveMsg(""), 3000);
-     setSaving(false);
-    return;
-}
+      setSaveMsg("❌ Please login to save your resume");
+      setTimeout(() => setSaveMsg(""), 3000);
+      return;
+    }
+
     setSaving(true);
     setSaveMsg("");
 
@@ -101,7 +110,8 @@ useEffect(() => {
       setTimeout(() => setSaveMsg(""), 3000);
     }
   };
-    const handleGetSuggestions = async () => {
+
+  const handleGetSuggestions = async () => {
     setSuggesting(true);
     setSuggestions(null);
     try {
@@ -120,8 +130,18 @@ useEffect(() => {
       setSuggesting(false);
     }
   };
+
+  // Show loading while checking auth
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <p className="text-white/50 text-sm">Loading...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#0f0f14] text-white font-sans">
+    <div className="min-h-screen bg-[#050505] text-white font-sans">
       <BuilderHeader
         resumeData={resumeData}
         activeTemplate={activeTemplate}
@@ -148,27 +168,26 @@ useEffect(() => {
             updateResumeData={updateResumeData}
           />
           {suggestions && (
-          <div className="p-4 border-t border-white/10 space-y-3">
-          <h3 className="text-sm font-semibold text-purple-400">
-          ✨ AI Suggestions
-          </h3>
-          {Object.entries(suggestions).map(([key, value]) => (
-           <div key={key} className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
-            <p className="text-xs font-semibold text-purple-300 uppercase mb-1">
-            {key}
-            </p>
-            <p className="text-xs text-white/70">{value}</p>
-           </div>
-           ))}
-          </div>
+            <div className="p-4 border-t border-white/10 space-y-3">
+              <h3 className="text-sm font-semibold text-blue-400">
+                ✨ AI Suggestions
+              </h3>
+              {Object.entries(suggestions).map(([key, value]) => (
+                <div key={key} className="bg-white/5 border border-white/10 rounded-lg p-3">
+                  <p className="text-xs font-semibold text-blue-300 uppercase mb-1">
+                    {key}
+                  </p>
+                  <p className="text-xs text-white/70">{value}</p>
+                </div>
+              ))}
+            </div>
           )}
         </div>
-        
 
         {/* Preview Panel */}
         <div
           className={`
-            w-full md:w-1/2 overflow-y-auto bg-[#1a1a24]
+            w-full md:w-1/2 overflow-y-auto bg-[#050505]
             ${mobileView === "form" ? "hidden md:block" : "block"}
           `}
         >
