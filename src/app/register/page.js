@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
@@ -14,7 +14,10 @@ import {
     Sparkles,
     ShieldCheck,
     Star,
-    ArrowLeft
+    ArrowLeft,
+    AlertCircle,
+    Check,
+    X
 } from "lucide-react";
 
 // --- Components ---
@@ -63,6 +66,90 @@ const GridBackground = () => (
 
 // --- Main Page Component ---
 
+// --- Validation Helpers ---
+
+// Email regex: local-part @ domain . tld
+// Local part: starts with alphanumeric, allows dots/underscores/hyphens in the middle
+// Domain: alphanumeric with hyphens, dot-separated segments
+// TLD: 2-7 alpha characters
+const EMAIL_REGEX = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]*[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,7}$/;
+
+const PASSWORD_CRITERIA = [
+    { key: "minLength", label: "At least 8 characters", test: (pw) => pw.length >= 8 },
+    { key: "uppercase", label: "One uppercase letter (A-Z)", test: (pw) => /[A-Z]/.test(pw) },
+    { key: "lowercase", label: "One lowercase letter (a-z)", test: (pw) => /[a-z]/.test(pw) },
+    { key: "number", label: "One number (0-9)", test: (pw) => /[0-9]/.test(pw) },
+    { key: "special", label: "One special character (!@#$%^&*)", test: (pw) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(pw) },
+];
+
+function getPasswordStrength(pw) {
+    if (!pw) return { score: 0, label: "", color: "" };
+    const passed = PASSWORD_CRITERIA.filter((c) => c.test(pw)).length;
+    if (passed <= 1) return { score: 1, label: "Very Weak", color: "bg-red-500" };
+    if (passed === 2) return { score: 2, label: "Weak", color: "bg-orange-500" };
+    if (passed === 3) return { score: 3, label: "Fair", color: "bg-yellow-500" };
+    if (passed === 4) return { score: 4, label: "Strong", color: "bg-blue-500" };
+    return { score: 5, label: "Excellent", color: "bg-green-500" };
+}
+
+// --- Password Strength Meter Component ---
+
+function PasswordStrengthMeter({ password }) {
+    const strength = getPasswordStrength(password);
+
+    if (!password) return null;
+
+    return (
+        <div className="mt-3 space-y-3">
+            {/* Strength bar */}
+            <div className="flex items-center gap-3">
+                <div className="flex-1 flex gap-1">
+                    {[1, 2, 3, 4, 5].map((level) => (
+                        <div
+                            key={level}
+                            className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
+                                level <= strength.score ? strength.color : "bg-white/10"
+                            }`}
+                        />
+                    ))}
+                </div>
+                <span className={`text-xs font-medium min-w-[70px] text-right transition-colors duration-300 ${
+                    strength.score <= 1 ? "text-red-400" :
+                    strength.score === 2 ? "text-orange-400" :
+                    strength.score === 3 ? "text-yellow-400" :
+                    strength.score === 4 ? "text-blue-400" : "text-green-400"
+                }`}>
+                    {strength.label}
+                </span>
+            </div>
+
+            {/* Criteria checklist */}
+            <div className="space-y-1.5">
+                {PASSWORD_CRITERIA.map((criteria) => {
+                    const passed = criteria.test(password);
+                    return (
+                        <div
+                            key={criteria.key}
+                            className={`flex items-center gap-2 text-xs transition-colors duration-200 ${
+                                passed ? "text-green-400" : "text-slate-500"
+                            }`}
+                        >
+                            {passed ? (
+                                <Check className="w-3.5 h-3.5 flex-shrink-0" />
+                            ) : (
+                                <X className="w-3.5 h-3.5 flex-shrink-0" />
+                            )}
+                            <span>{criteria.label}</span>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+// --- Main Page Component ---
+
 export default function Register() {
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
@@ -71,21 +158,73 @@ export default function Register() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
+    // Track which fields the user has interacted with (show errors only after touch)
+    const [touched, setTouched] = useState({ fullName: false, email: false, password: false });
+
     // Animation state
     const [loaded, setLoaded] = useState(false);
     useEffect(() => setLoaded(true), []);
 
     const router = useRouter();
 
+    // --- Validation logic ---
+    const validation = useMemo(() => {
+        const fullNameValid = fullName.trim().length >= 2;
+        const emailValid = EMAIL_REGEX.test(email);
+        const passwordValid = PASSWORD_CRITERIA.every((c) => c.test(password));
+
+        return {
+            fullName: {
+                valid: fullNameValid,
+                message: !fullName.trim()
+                    ? "Full name is required"
+                    : !fullNameValid
+                    ? "Name must be at least 2 characters"
+                    : "",
+            },
+            email: {
+                valid: emailValid,
+                message: !email.trim()
+                    ? "Email is required"
+                    : !emailValid
+                    ? "Enter a valid email (e.g. name@example.com)"
+                    : "",
+            },
+            password: {
+                valid: passwordValid,
+                message: !password
+                    ? "Password is required"
+                    : !passwordValid
+                    ? "Password does not meet all requirements"
+                    : "",
+            },
+            isFormValid: fullNameValid && emailValid && passwordValid,
+        };
+    }, [fullName, email, password]);
+
+    const handleBlur = useCallback((field) => {
+        setTouched((prev) => ({ ...prev, [field]: true }));
+    }, []);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Mark all fields as touched to show any remaining errors
+        setTouched({ fullName: true, email: true, password: true });
+
+        // Prevent submission if validation fails
+        if (!validation.isFormValid) {
+            setError("Please fix the errors above before submitting.");
+            return;
+        }
+
         setLoading(true);
         setError("");
         setSuccess("");
 
         try {
             const response = await axios.post("/api/user/register", {
-                fullName, email, password
+                fullName: fullName.trim(), email: email.trim().toLowerCase(), password
             });
 
             if (response.status === 200) {
@@ -93,6 +232,7 @@ export default function Register() {
                 setFullName("");
                 setEmail("");
                 setPassword("");
+                setTouched({ fullName: false, email: false, password: false });
 
                 // Redirect to verify-otp after 2 seconds
                 setTimeout(() => {
@@ -100,8 +240,10 @@ export default function Register() {
                 }, 2000);
             }
         } catch (err) {
-            if (err?.response?.status === 404) {
-                setError("User already registered. Please log in.");
+            if (err?.response?.data?.errors && err.response.data.errors.length > 0) {
+                setError(err.response.data.errors[0].messages[0]);
+            } else if (err?.response?.data?.message) {
+                setError(err.response.data.message);
             } else {
                 setError("An error occurred. Please try again.");
             }
@@ -188,7 +330,7 @@ export default function Register() {
                                 <p className="text-slate-400 text-sm">Start your free analysis today.</p>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="space-y-5">
+                            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
 
                                 {/* Full Name */}
                                 <div className="space-y-2">
@@ -199,11 +341,34 @@ export default function Register() {
                                             type="text"
                                             value={fullName}
                                             onChange={(e) => setFullName(e.target.value)}
+                                            onBlur={() => handleBlur("fullName")}
                                             placeholder="John Doe"
-                                            required
-                                            className="w-full bg-[#050505] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
+                                            className={`w-full bg-[#050505] border rounded-xl py-3 pl-12 pr-10 text-white placeholder-slate-600 focus:outline-none focus:ring-1 transition-all ${
+                                                touched.fullName && !validation.fullName.valid
+                                                    ? "border-red-500/50 focus:border-red-500/50 focus:ring-red-500/50"
+                                                    : touched.fullName && validation.fullName.valid
+                                                    ? "border-green-500/30 focus:border-green-500/50 focus:ring-green-500/50"
+                                                    : "border-white/10 focus:border-blue-500/50 focus:ring-blue-500/50"
+                                            }`}
                                         />
+                                        {/* Real-time indicator icon */}
+                                        {touched.fullName && (
+                                            <div className="absolute right-4 top-3.5">
+                                                {validation.fullName.valid ? (
+                                                    <CheckCircle2 className="w-5 h-5 text-green-400" />
+                                                ) : (
+                                                    <AlertCircle className="w-5 h-5 text-red-400" />
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
+                                    {/* Inline error message */}
+                                    {touched.fullName && validation.fullName.message && (
+                                        <p className="text-xs text-red-400 ml-1 flex items-center gap-1.5">
+                                            <span className="w-1 h-1 rounded-full bg-red-400 flex-shrink-0" />
+                                            {validation.fullName.message}
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* Email */}
@@ -215,11 +380,32 @@ export default function Register() {
                                             type="email"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
+                                            onBlur={() => handleBlur("email")}
                                             placeholder="name@company.com"
-                                            required
-                                            className="w-full bg-[#050505] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
+                                            className={`w-full bg-[#050505] border rounded-xl py-3 pl-12 pr-10 text-white placeholder-slate-600 focus:outline-none focus:ring-1 transition-all ${
+                                                touched.email && !validation.email.valid
+                                                    ? "border-red-500/50 focus:border-red-500/50 focus:ring-red-500/50"
+                                                    : touched.email && validation.email.valid
+                                                    ? "border-green-500/30 focus:border-green-500/50 focus:ring-green-500/50"
+                                                    : "border-white/10 focus:border-blue-500/50 focus:ring-blue-500/50"
+                                            }`}
                                         />
+                                        {touched.email && (
+                                            <div className="absolute right-4 top-3.5">
+                                                {validation.email.valid ? (
+                                                    <CheckCircle2 className="w-5 h-5 text-green-400" />
+                                                ) : (
+                                                    <AlertCircle className="w-5 h-5 text-red-400" />
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
+                                    {touched.email && validation.email.message && (
+                                        <p className="text-xs text-red-400 ml-1 flex items-center gap-1.5">
+                                            <span className="w-1 h-1 rounded-full bg-red-400 flex-shrink-0" />
+                                            {validation.email.message}
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* Password */}
@@ -231,31 +417,48 @@ export default function Register() {
                                             type="password"
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
+                                            onBlur={() => handleBlur("password")}
                                             placeholder="Create a secure password"
-                                            required
-                                            className="w-full bg-[#050505] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
+                                            className={`w-full bg-[#050505] border rounded-xl py-3 pl-12 pr-10 text-white placeholder-slate-600 focus:outline-none focus:ring-1 transition-all ${
+                                                touched.password && !validation.password.valid
+                                                    ? "border-red-500/50 focus:border-red-500/50 focus:ring-red-500/50"
+                                                    : touched.password && validation.password.valid
+                                                    ? "border-green-500/30 focus:border-green-500/50 focus:ring-green-500/50"
+                                                    : "border-white/10 focus:border-blue-500/50 focus:ring-blue-500/50"
+                                            }`}
                                         />
+                                        {touched.password && (
+                                            <div className="absolute right-4 top-3.5">
+                                                {validation.password.valid ? (
+                                                    <CheckCircle2 className="w-5 h-5 text-green-400" />
+                                                ) : (
+                                                    <AlertCircle className="w-5 h-5 text-red-400" />
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
+                                    {/* Password Strength Meter */}
+                                    <PasswordStrengthMeter password={password} />
                                 </div>
 
                                 {/* Status Messages */}
                                 {error && (
                                     <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
                                         {error}
                                     </div>
                                 )}
                                 {success && (
                                     <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-xs flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                                        <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
                                         {success}
                                     </div>
                                 )}
 
                                 <button
                                     type="submit"
-                                    disabled={loading}
-                                    className="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 mt-6 shadow-lg shadow-white/5 disabled:opacity-70 disabled:cursor-not-allowed"
+                                    disabled={loading || !validation.isFormValid}
+                                    className="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 mt-6 shadow-lg shadow-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
                                 >
                                     {loading ? (
                                         <>

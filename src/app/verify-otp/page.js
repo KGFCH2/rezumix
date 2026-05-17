@@ -74,8 +74,12 @@ export default function VerifyOTP() {
                 }, 2000);
             }
         } catch (err) {
-            if (err.response?.status === 400) {
+            if (err?.response?.data?.errors && err.response.data.errors.length > 0) {
+                setError(err.response.data.errors[0].messages[0]);
+            } else if (err.response?.status === 400) {
                 setError("Invalid OTP. Please try again.");
+            } else if (err?.response?.data?.message) {
+                setError(err.response.data.message);
             } else {
                 setError("Verification failed. Please try again.");
             }

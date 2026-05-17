@@ -18,7 +18,14 @@ export const authOptions = NextAuth({
           await connectDB();
           const { email, password } = credentials;
 
-          const user = await userModel.findOne({ email });
+          // Prevent NoSQL injection
+          if (typeof email !== "string" || typeof password !== "string") {
+            throw new Error("Invalid input types");
+          }
+
+          const sanitizedEmail = email.trim().toLowerCase();
+
+          const user = await userModel.findOne({ email: sanitizedEmail });
           if (!user) {
             throw new Error("User not found");
           }
