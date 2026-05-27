@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { marked } from "marked";
 import { toast } from "sonner";
 import KeywordAnalysis from "@/components/dasboard-components/KeywordAnalysis";
+import { ResultSkeleton } from "@/components/ui/result-skeleton";
 
 export default function ResumeAnalyzer() {
     const [file, setFile] = useState(null);
@@ -239,6 +240,15 @@ export default function ResumeAnalyzer() {
                         </div>
                     </div>
                 </section>
+
+                {/* Skeleton shown while waiting for stream to start */}
+                {loading && !result && (
+                    <section className="px-4 sm:px-6 lg:px-8 pb-8">
+                        <div className="max-w-5xl mx-auto">
+                            <ResultSkeleton />
+                        </div>
+                    </section>
+                )}
 
                 {/* Main Analysis Results */}
                 {result && (
