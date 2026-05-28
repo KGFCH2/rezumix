@@ -200,9 +200,14 @@ const AllResumes = () => {
                                     {error}
                                 </div>
                             ) : filteredResumes.length === 0 ? (
-                                <div className="text-center py-20 border border-dashed border-white/10 rounded-3xl bg-white/5">
-                                    <p className="text-slate-400 mb-2">No resumes found.</p>
-                                    <p className="text-sm text-slate-500">Upload a resume to see it here.</p>
+                                <div className="text-center py-20 border border-dashed border-white/10 rounded-3xl bg-white/[0.02] backdrop-blur-sm flex flex-col items-center justify-center p-8">
+                                    <div className="w-16 h-16 rounded-full bg-slate-500/10 flex items-center justify-center text-slate-400 mb-4 border border-white/5 shadow-inner">
+                                        <FileText className="w-8 h-8 opacity-60" />
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-white mb-1">No resumes found</h3>
+                                    <p className="text-sm text-slate-500 max-w-sm mx-auto">
+                                        There are currently no uploaded resume records available in the registry. Try adjusting your search term or upload a new resume.
+                                    </p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
