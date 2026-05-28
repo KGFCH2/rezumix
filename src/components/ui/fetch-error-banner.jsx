@@ -1,7 +1,7 @@
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function FetchErrorBanner({ message, onRetry, className }) {
+export function FetchErrorBanner({ message, onRetry, isRetrying = false, className }) {
     return (
         <div
             className={cn(
@@ -19,10 +19,11 @@ export function FetchErrorBanner({ message, onRetry, className }) {
             {onRetry && (
                 <button
                     onClick={onRetry}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-300 text-sm font-medium transition-colors"
+                    disabled={isRetrying}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 disabled:hover:bg-red-500/10 disabled:opacity-50 border border-red-500/20 text-red-300 text-sm font-medium transition-colors cursor-pointer disabled:cursor-not-allowed"
                 >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    Try Again
+                    <RefreshCw className={cn("w-3.5 h-3.5", isRetrying && "animate-spin")} />
+                    {isRetrying ? "Retrying..." : "Try Again"}
                 </button>
             )}
         </div>
