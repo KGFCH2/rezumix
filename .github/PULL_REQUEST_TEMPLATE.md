@@ -35,8 +35,10 @@ Add screenshots or recordings if your changes affect the UI/UX.
 
 ## Checklist
 
-- [ ] My code follows the project's coding style
+- [ ] My code follows the project's coding style guidelines
 - [ ] I have tested my changes locally
+- [ ] I have verified responsiveness across mobile, tablet, and desktop viewports
+- [ ] Accessibility (ARIA labels, keyboard navigation) has been considered and verified
 - [ ] I have updated the documentation if required
 - [ ] No existing functionality has been broken
 - [ ] All checks and linting pass successfully
@@ -47,4 +49,4 @@ Add screenshots or recordings if your changes affect the UI/UX.
 
 - [ ] I confirm that I am a participant of GSSoC'26
 - [ ] I have followed the contribution guidelines of this project
-- [ ] This PR is ready for review
+- [ ] This PR is ready for review and contains no unrelated file changes
