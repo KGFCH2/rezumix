@@ -20,10 +20,15 @@ export async function connectDB() {
     if (!cached.promise) {
         const opts = {
             bufferCommands: true,
-            maxPoolSize: 10, // fixed typo: `maxPollSize` ➜ `maxPoolSize`
+            maxPoolSize: 10,
+            connectTimeoutMS: 10000,
+            socketTimeoutMS: 45000,
         };
 
-        cached.promise = mongoose.connect(MONGODB_URI, opts).then(() => mongoose.connection);
+        cached.promise = mongoose.connect(MONGODB_URI, opts).then(() => {
+            console.log("MongoDB connected successfully");
+            return mongoose.connection;
+        });
     }
 
     try {
