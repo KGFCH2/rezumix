@@ -61,6 +61,8 @@ export const DesktopSidebar = ({
   const { open, setOpen, animate } = useSidebar();
   return (<>
     <motion.div
+      role="navigation"
+      aria-label="Main Navigation"
       className={cn(
         "h-full px-4 py-4 hidden  md:flex md:flex-col bg-black dark:bg-neutral-800 w-[300px] shrink-0",
         className
@@ -90,7 +92,16 @@ export const MobileSidebar = ({
       {...props}>
       <div className="flex justify-end z-20 w-full">
         <IconMenu2
-          className="text-neutral-800 dark:text-neutral-200"
+          role="button"
+          aria-label="Open Navigation Menu"
+          tabIndex={0}
+          className="text-neutral-800 dark:text-neutral-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-sm"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setOpen(!open);
+            }
+          }}
           onClick={() => setOpen(!open)} />
       </div>
       <AnimatePresence>
@@ -108,7 +119,16 @@ export const MobileSidebar = ({
               className
             )}>
             <div
-              className="absolute right-10 top-10 z-50 text-neutral-800 dark:text-neutral-200"
+              role="button"
+              aria-label="Close Navigation Menu"
+              tabIndex={0}
+              className="absolute right-10 top-10 z-50 text-neutral-800 dark:text-neutral-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-sm"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setOpen(!open);
+                }
+              }}
               onClick={() => setOpen(!open)}>
               <IconX />
             </div>
