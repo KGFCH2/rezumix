@@ -1,7 +1,21 @@
 import nodemailer from "nodemailer";
 
+function escapeHtml(text) {
+    if (typeof text !== "string") return "";
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 export const sendUserEmail = async (email, name, content) => {
     try {
+        const escapedName = escapeHtml(name);
+        const escapedContent = escapeHtml(content);
+        const escapedEmail = escapeHtml(email);
+
         const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
@@ -12,9 +26,9 @@ export const sendUserEmail = async (email, name, content) => {
 
         const mailOptions = {
             from: process.env.EMAIL_USER,  
-            replyTo: email,                 
+            replyTo: escapedEmail,                 
             to: "rezumix.ai@gmail.com",
-            subject: `New Contact Query from ${name}`,
+            subject: `New Contact Query from ${escapedName}`,
             html: `
                 <!DOCTYPE html>
                 <html>
@@ -107,22 +121,22 @@ export const sendUserEmail = async (email, name, content) => {
                         <div class="content">
                             <div class="info-row">
                                 <span class="label">Name</span>
-                                <span class="value">${name}</span>
+                                <span class="value">${escapedName}</span>
                             </div>
                             <div class="info-row">
                                 <span class="label">Email</span>
-                                <span class="value"><a href="mailto:${email}" style="color: #3b82f6; text-decoration: none;">${email}</a></span>
+                                <span class="value"><a href="mailto:${escapedEmail}" style="color: #3b82f6; text-decoration: none;">${escapedEmail}</a></span>
                             </div>
                             <div class="info-row">
                                 <span class="label">Message</span>
                                 <span class="value">
-                                    <div class="message-box">${content}</div>
+                                    <div class="message-box">${escapedContent}</div>
                                 </span>
                             </div>
                         </div>
                         <div class="footer">
                             This message was sent via the Rezumix contact form.<br/>
-                            Reply directly to this email to respond to ${name}.
+                            Reply directly to this email to respond to ${escapedName}.
                         </div>
                     </div>
                 </body>
